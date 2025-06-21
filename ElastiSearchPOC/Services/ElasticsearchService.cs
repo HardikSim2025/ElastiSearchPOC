@@ -28,7 +28,6 @@ namespace ElastiSearchPOC.Services
         {
             var searchRequest = new SearchRequest("logs")
             {
-                Size = 10000, // Set to desired number
                 Query = new BoolQuery
                 {
                     Filter = GetFilters(request)
@@ -118,11 +117,11 @@ namespace ElastiSearchPOC.Services
 
             // adding below fields in filters as term for optimization which are in index as keyword
             if (!string.IsNullOrEmpty(req.Service))
-                filters.Add(new TermQuery { Field = "service.keyword", Value = req.Service });
+                filters.Add(new TermQuery { Field = "service", Value = req.Service });
             if (!string.IsNullOrEmpty(req.Category))
-                filters.Add(new TermQuery { Field = "category.keyword", Value = req.Category });
+                filters.Add(new TermQuery { Field = "category", Value = req.Category });
             if (!string.IsNullOrEmpty(req.Environment))
-                filters.Add(new TermQuery { Field = "environment.keyword", Value = req.Environment });
+                filters.Add(new TermQuery { Field = "environment", Value = req.Environment });
 
             // adding below date range fields in filters as range for optimization
             if (req.From.HasValue || req.To.HasValue)

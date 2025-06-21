@@ -19,14 +19,14 @@ namespace ElastiSearchPOC.Controllers
         public async Task<ActionResult<LogQueryResponse>> SearchWithFilter([FromBody] LogQueryRequest request)
         {
             var result = await _elasticsearchService.SearchLogsUsingFilterAsync(request);
-            return Ok(new List<long>{ result.TookMilliseconds, result.Logs.Count});
+            return Ok(result);
         }
 
         [HttpPost("search/without-filter")]
         public async Task<ActionResult<LogQueryResponse>> SearchWithoutFilter([FromBody] LogQueryRequest request)
         {
             var result = await _elasticsearchService.SearchLogsUsingMustOnlyAsync(request);
-            return Ok(new List<long> { result.TookMilliseconds, result.Logs.Count });
+            return Ok(result);
         }
 
         [HttpPut("add")]

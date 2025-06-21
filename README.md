@@ -63,33 +63,53 @@ builder.Services.AddSingleton<IElasticClient>(sp =>
 
 ---
 
-# Elasticsearch Log Search Optimization Implementation
+## Elasticsearch Log Search Optimization Implementation
 
-This document outlines the optimization strategies implemented for efficient log searching in Elasticsearch.
+This section outlines the optimization strategies implemented for efficient log searching in Elasticsearch.
 
-## ✅ 1. Time-Based Indices
+### ✅ 1. Time-Based Indices
 - Implemented daily indices with naming pattern: `logs-YYYY-MM-DD`
 - Benefits:
   - Efficient indexing
   - Easier data archiving and deletion
   - Faster queries on recent logs
 
-## ✅ 2. Data Stream Integration
+### ✅ 2. Data Stream Integration
 - Configured a data stream with alias `logs-`
 - Elasticsearch automatically manages:
   - Backing indices: `.ds-logs-000001`, `.ds-logs-000002`, etc.
-  - Rollover conditions
 - Unified write endpoint simplifies log ingestion
+- No need to manage individual indices manually
+- We have added datastream as below
+```c# 
+var existsResponse = await _client.Indices.TemplateV2ExistsAsync(templateName);
+if (existsResponse.Exists)
+{
+    var getDataStreamResponse = await _client.Indices.GetDataStreamAsync("logs");
+    if(!getDataStreamResponse.DataStreams.Any())
+    {
+        var createDataStreamResponseR = await _client.Indices.CreateDataStreamAsync("logs");
+        if (!createDataStreamResponseR.IsValid)
+        {
+            throw new Exception($"Failed to create data stream: {createDataStreamResponseR.ServerError}");
+        }
+    }
+    return;
+}
+```
 
-## ✅ 3. Filter-Based Queries
+### ✅ 3. Filter-Based Queries
 - Queries use filters for high performance:
 ```json
 {
   "query": {
     "bool": {
       "filter": [
-        { "term": { "level": "error" } },
-        { "range": { "@timestamp": { "gte": "now-1h" } } }
+        { "match": { "message": "Debug" } },
+        { "term": { "category": "Debug" } },
+        { "term": { "service": "UserService" } },
+        { "term": { "environment": "Qa" } },
+        { "range": { "@timestamp": { "gte": "now-1d" } } }
       ]
     }
   }
@@ -97,7 +117,7 @@ This document outlines the optimization strategies implemented for efficient log
 ```
 - Filters are cacheable and do not compute scores → faster search
 
-## ✅ 4. Index Mapping Optimization
+### ✅ 4. Index Mapping Optimization
 - Keyword fields used for:
   - `service`, `category`, `environment`, etc.
 - Disabled indexing on unnecessary fields using:
@@ -110,7 +130,7 @@ This document outlines the optimization strategies implemented for efficient log
 }
 ```
 
-## ✅ 6. Keyword Field Usage
+### ✅ 6. Keyword Field Usage
 - Ensured all fields used in filtering/sorting are of type `keyword`
 - Examples:
 ```json
@@ -120,16 +140,16 @@ This document outlines the optimization strategies implemented for efficient log
 ```
 - Optimized for aggregations and filter clauses
 
-## ✅ 7. Deep Pagination Optimization
+### ✅ 7. Deep Pagination Optimization
 - Replaced `from + size` with `search_after` for large result sets:
 ```json
 {
   "size": 100,
   "query": { ... },
-  "search_after": ["2025-06-18T14:00:00", "log_id"],
+  "search_after": ["2025-06-18T14:00:00", "8cd19658-6443-4b38-817e-8600d6be6bf7"],
   "sort": [
     { "@timestamp": "desc" },
-    { "_id": "desc" }
+    { "uniqueId": "desc" }
   ]
 }
 ```
