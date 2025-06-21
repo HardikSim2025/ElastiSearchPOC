@@ -35,4 +35,10 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+using (var scope = app.Services.CreateScope())
+{
+    var esService = scope.ServiceProvider.GetRequiredService<ElasticsearchService>();
+    await esService.CreateLogsIndexTemplateAsync();
+}
+
 app.Run();
