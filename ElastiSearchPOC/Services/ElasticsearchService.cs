@@ -150,7 +150,7 @@ namespace ElastiSearchPOC.Services
             if (req.From.HasValue || req.To.HasValue)
                 musts.Add(new DateRangeQuery
                 {
-                    Field = "timestamp",
+                    Field = "@timestamp",
                     GreaterThanOrEqualTo = req.From,
                     LessThanOrEqualTo = req.To
                 });

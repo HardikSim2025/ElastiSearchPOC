@@ -7,13 +7,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="DatabaseScript\**" />
+    <Content Remove="DatabaseScript\**" />
+    <EmbeddedResource Remove="DatabaseScript\**" />
+    <None Remove="DatabaseScript\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" />
     <PackageReference Include="NEST" Version="7.17.5" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="DatabaseScript\" />
     <Folder Include="Services\" />
   </ItemGroup>
 

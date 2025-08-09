@@ -1,62 +1,68 @@
-﻿# ElastiSearchPOC
+﻿# 📊 ElastiSearchPOC – Log Search API using ASP.NET Core (.NET 8) + Elasticsearch + NEST
 
-This project demonstrates how to use Elasticsearch with ASP.NET Core (.NET 8) and the [NEST](https://www.nuget.org/packages/NEST) client. Below are instructions to install Elasticsearch using Docker and connect it to this project.
+This Proof of Concept (PoC) implements a lightweight log management API using ASP.NET Core (.NET 8) and Elasticsearch. It provides endpoints to:
 
----
+- Index log entries into Elasticsearch
+- Search logs with filters like service name, log level, environment, and timestamp range
+- Demonstrate optimized search using time-based indices, keyword mapping, and deep pagination
 
-## Prerequisites
-
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- [Docker](https://www.docker.com/products/docker-desktop)
-- [Visual Studio 2022](https://visualstudio.microsoft.com/vs/)
+The API is integrated with the NEST client and configured to work with a local Elasticsearch instance running in Docker. This setup mimics a production-like logging pipeline with search and analytics support.
 
 ---
 
-## 1. Run Elasticsearch in Docker
+## 🛠 Prerequisites
 
-Open a terminal and run the following command to start Elasticsearch:
-add command
-```bash 
-docker run -d --name elasticsearch-poc -p 9200:9200 -e "discovery.type=single-node" -e "xpack.security.enabled=false" docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+- [.NET 8 SDK](https://dotnet.microsoft.com/download)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- Visual Studio 2022 (or Visual Studio Code)
+
+---
+
+## 🐳 Step 1: Run Elasticsearch Using Docker
+
+Start a single-node Elasticsearch container:
+
+```sh
+docker run -d --name elasticsearch-poc -p 9200:9200 \
+  -e "discovery.type=single-node" \
+  -e "xpack.security.enabled=false" \
+  docker.elastic.co/elasticsearch/elasticsearch:8.13.4
 ```
 - This will pull and run Elasticsearch 8.13.4.
 - The container exposes port `9200` for HTTP.
 - Security is disabled for local development.
 
 **To stop and remove the container:**
-```bash
+```sh
 docker stop elasticsearch-poc 
 docker rm elasticsearch-poc
 ```
 
 ---
 
-## 2. Configure the Project to Connect to Elasticsearch
+## Step 2: Configure the Project to Connect to Elasticsearch
 
 The project is already configured to connect to `http://localhost:9200` in `Program.cs`:
 No further changes are needed if you are running Elasticsearch locally on the default port.
-```
+```csharp
 builder.Services.AddSingleton<IElasticClient>(sp => 
     { 
-	    var settings = new ConnectionSettings(new Uri("http://localhost:9200")).DefaultIndex("logs-*"); 
-	    return new ElasticClient(settings); 
+        var settings = new ConnectionSettings(new Uri("http://localhost:9200")).DefaultIndex("logs-*"); 
+        return new ElasticClient(settings); 
     });
-
 ```
-
 
 ---
 
-## 3. Run the Project
+## Step 3: Run the Project
 
-1. Build and run the project from Visual Studio 2022 or using the .NET CLI:
+1. Build and run the project from Visual Studio 2022 or using the .NET CLI.
 2. The API will be available at `https://localhost:5001` (or the port shown in the console).
-
 3. Swagger UI is enabled in development mode for easy testing.
 
 ---
 
-## 4. Test the Connection
+## Step 4: Test the Connection
 
 - Open [http://localhost:5001/swagger](http://localhost:5001/swagger) in your browser.
 - Use the available endpoints to index and search logs.
@@ -67,21 +73,21 @@ builder.Services.AddSingleton<IElasticClient>(sp =>
 
 This section outlines the optimization strategies implemented for efficient log searching in Elasticsearch.
 
-### ✅ 1. Time-Based Indices
+### ✅ Time-Based Indices
 - Implemented daily indices with naming pattern: `logs-YYYY-MM-DD`
 - Benefits:
   - Efficient indexing
   - Easier data archiving and deletion
   - Faster queries on recent logs
 
-### ✅ 2. Data Stream Integration
+### ✅ Data Stream Integration
 - Configured a data stream with alias `logs-`
 - Elasticsearch automatically manages:
   - Backing indices: `.ds-logs-000001`, `.ds-logs-000002`, etc.
 - Unified write endpoint simplifies log ingestion
 - No need to manage individual indices manually
 - We have added datastream as below
-```c# 
+```csharp
 var existsResponse = await _client.Indices.TemplateV2ExistsAsync(templateName);
 if (existsResponse.Exists)
 {
@@ -98,7 +104,7 @@ if (existsResponse.Exists)
 }
 ```
 
-### ✅ 3. Filter-Based Queries
+### ✅ Filter-Based Queries
 - Queries use filters for high performance:
 ```json
 {
@@ -117,7 +123,7 @@ if (existsResponse.Exists)
 ```
 - Filters are cacheable and do not compute scores → faster search
 
-### ✅ 4. Index Mapping Optimization
+### ✅ Index Mapping Optimization
 - Keyword fields used for:
   - `service`, `category`, `environment`, etc.
 - Disabled indexing on unnecessary fields using:
@@ -130,7 +136,7 @@ if (existsResponse.Exists)
 }
 ```
 
-### ✅ 6. Keyword Field Usage
+### ✅ Keyword Field Usage
 - Ensured all fields used in filtering/sorting are of type `keyword`
 - Examples:
 ```json
@@ -140,7 +146,7 @@ if (existsResponse.Exists)
 ```
 - Optimized for aggregations and filter clauses
 
-### ✅ 7. Deep Pagination Optimization
+### ✅ Deep Pagination Optimization
 - Replaced `from + size` with `search_after` for large result sets:
 ```json
 {
@@ -157,11 +163,32 @@ if (existsResponse.Exists)
 
 ---
 
-## Troubleshooting
+## 🧯 Troubleshooting
 
-- Ensure Docker is running and Elasticsearch is healthy (`docker ps`).
-- If you change the Elasticsearch port or host, update the URI in `Program.cs`.
-- For production, enable security and configure credentials as needed.
+- ✅ Ensure Docker is running: `docker ps`
+- 🔁 Restart the container if needed: `docker restart elasticsearch-poc`
+- 🔌 Update `Program.cs` if using a different Elasticsearch port or host
+- 🔐 For production: enable security and configure credentials
+
+---
+
+## 📸 Output / Result Snapshots
+
+### With Term filter
+![Request Example](Image/1.PNG)
+![Result Example](Image/2.PNG)
+
+### With Query Fields only
+![Example 3](Image/3.PNG)
+![Example 4](Image/4.PNG)
+
+### With Search After Pagination First Request
+![Example 5](Image/5.PNG)
+![Example 6](Image/6.PNG)
+
+### With Search After Pagination
+![Example 7](Image/7.PNG)
+![Example 8](Image/8.PNG)
 
 ---
 
