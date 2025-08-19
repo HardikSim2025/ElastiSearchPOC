@@ -175,20 +175,20 @@ if (existsResponse.Exists)
 ## 📸 Output / Result Snapshots
 
 ### With Term filter
-![Request Example](Image/1.PNG)
-![Result Example](Image/2.PNG)
+![Request Example](ElastiSearchPOC/Image/1.PNG)
+![Result Example](ElastiSearchPOC/Image/2.PNG)
 
 ### With Query Fields only
-![Example 3](Image/3.PNG)
-![Example 4](Image/4.PNG)
+![Example 3](ElastiSearchPOC/Image/3.PNG)
+![Example 4](ElastiSearchPOC/Image/4.PNG)
 
 ### With Search After Pagination First Request
-![Example 5](Image/5.PNG)
-![Example 6](Image/6.PNG)
+![Example 5](ElastiSearchPOC/Image/5.PNG)
+![Example 6](ElastiSearchPOC/Image/6.PNG)
 
 ### With Search After Pagination
-![Example 7](Image/7.PNG)
-![Example 8](Image/8.PNG)
+![Example 7](ElastiSearchPOC/Image/7.PNG)
+![Example 8](ElastiSearchPOC/Image/8.PNG)
 
 ---
 
